@@ -1,0 +1,10 @@
+[package]
+name = "toad-mcp"
+version = "0.1.0"
+edition = "2024"
+license = "BUSL-1.1"
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+[dependencies]
