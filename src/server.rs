@@ -69,7 +69,7 @@ pub struct SwitchContextParams {
     pub name: String,
 }
 
-#[derive(Deserialize, JsonSchema)]
+#[derive(Deserialize, Serialize, JsonSchema)]
 pub struct NoParams {
     // Empty
 }
@@ -333,7 +333,7 @@ impl ToadService {
             let contexts: Vec<_> = config.project_contexts.iter().map(|(name, ctx)| {
                 serde_json::json!({
                     "name": name,
-                    "path": ctx.path,
+                    "path": ctx.path.clone(),
                     "type": ctx.context_type.to_string(),
                     "active": name == &active
                 })
