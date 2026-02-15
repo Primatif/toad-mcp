@@ -1,4 +1,4 @@
-use rmcp::model::{ErrorData, ErrorCode};
+use rmcp::model::{ErrorCode, ErrorData};
 use toad_core::ToadError;
 
 pub fn toad_error_to_mcp(err: ToadError) -> ErrorData {

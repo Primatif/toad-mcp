@@ -14,7 +14,7 @@ async fn main() -> anyhow::Result<()> {
             std::process::exit(1);
         }
     };
-    
+
     let transport = (tokio::io::stdin(), tokio::io::stdout());
     let server = service.serve(transport).await?;
     server.waiting().await?;

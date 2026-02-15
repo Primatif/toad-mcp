@@ -15,14 +15,14 @@ real-time.
   activity tier, or VCS status.
 - **get_project_detail** — Return full context for a single project, including
   its CONTEXT.md deep-dive.
-- **search_projects** — Semantic search across project names, essence, tags,
-  and taxonomy.
+- **search_projects** — Semantic search across project names, essence, tags, and
+  taxonomy.
 - **get_ecosystem_summary** — Return the system-prompt-tier overview of the
   entire ecosystem.
 - **get_ecosystem_status** — Return ecosystem health with per-project git
   status, staleness, and activity tiers.
-- **get_project_stats** — Return disk usage analytics with per-project sizes
-  and bloat index.
+- **get_project_stats** — Return disk usage analytics with per-project sizes and
+  bloat index.
 
 All tools are **read-only and idempotent** — safe for repeated agent calls with
 no side effects.
