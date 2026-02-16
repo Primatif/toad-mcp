@@ -110,3 +110,71 @@ async fn test_mcp_tool_call() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+
+#[tokio::test]
+async fn test_mcp_new_tools_missing_files() -> Result<(), Box<dyn std::error::Error>> {
+    let dir = tempdir()?;
+    let config_dir = dir.path().join(".toad");
+    fs::create_dir_all(&config_dir)?;
+
+    let mut child = Command::new(env!("CARGO_BIN_EXE_toad-mcp"))
+        .env("TOAD_CONFIG_DIR", &config_dir)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::inherit())
+        .spawn()?;
+
+    let mut stdin = child.stdin.take().unwrap();
+    let mut stdout = BufReader::new(child.stdout.take().unwrap());
+
+    // Handshake
+    stdin.write_all(r#"{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"0.1"}}}"#.as_bytes()).await?;
+    stdin.write_all(b"\n").await?;
+    stdin.flush().await?;
+    let mut line = String::new();
+    stdout.read_line(&mut line).await?;
+
+    stdin
+        .write_all(r#"{"jsonrpc":"2.0","method":"notifications/initialized"}"#.as_bytes())
+        .await?;
+    stdin.write_all(b"\n").await?;
+    stdin.flush().await?;
+
+    // Call get_atlas (file missing)
+    let call_req = r#"{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"get_atlas","arguments":{}}}"#;
+    stdin.write_all(call_req.as_bytes()).await?;
+    stdin.write_all(b"\n").await?;
+    stdin.flush().await?;
+
+    line.clear();
+    stdout.read_line(&mut line).await?;
+    assert!(line.contains("error"));
+    assert!(line.contains("ATLAS.json not found"));
+
+    // Call get_manifest (file missing)
+    let call_req = r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"get_manifest","arguments":{}}}"#;
+    stdin.write_all(call_req.as_bytes()).await?;
+    stdin.write_all(b"\n").await?;
+    stdin.flush().await?;
+
+    line.clear();
+    stdout.read_line(&mut line).await?;
+    assert!(line.contains("error"));
+    assert!(line.contains("MANIFEST.md not found"));
+
+    // Call get_project_context (project missing)
+    let call_req = r#"{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"get_project_context","arguments":{"name":"non-existent"}}}"#;
+    stdin.write_all(call_req.as_bytes()).await?;
+    stdin.write_all(b"\n").await?;
+    stdin.flush().await?;
+
+    line.clear();
+    stdout.read_line(&mut line).await?;
+    assert!(line.contains("error"));
+    assert!(line.contains("CONTEXT.md for project 'non-existent' not found"));
+
+    drop(stdin);
+    let _ = child.wait().await?;
+
+    Ok(())
+}
