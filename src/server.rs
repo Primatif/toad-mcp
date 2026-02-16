@@ -497,6 +497,85 @@ impl ToadService {
 
         Ok(CallToolResult::success(vec![Content::text(result)]))
     }
+
+    #[tool(description = "Get the full architectural atlas (DNA map for all projects)")]
+    pub async fn get_atlas(
+        &self,
+        _params: rmcp::handler::server::wrapper::Parameters<NoParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let result = tokio::task::spawn_blocking(move || {
+            let ws = Workspace::discover()?;
+            let atlas_path = ws.atlas_path();
+
+            if !atlas_path.exists() {
+                return Err(toad_core::ToadError::Other(
+                    "ATLAS.json not found. Run 'toad manifest' to generate it.".to_string(),
+                ));
+            }
+
+            let content = std::fs::read_to_string(atlas_path)?;
+            Ok::<_, toad_core::ToadError>(content)
+        })
+        .await
+        .map_err(|e| crate::errors::toad_error_to_mcp(toad_core::ToadError::Other(e.to_string())))?
+        .map_err(crate::errors::toad_error_to_mcp)?;
+
+        Ok(CallToolResult::success(vec![Content::text(result)]))
+    }
+
+    #[tool(description = "Get the full ecosystem manifest (detailed project list)")]
+    pub async fn get_manifest(
+        &self,
+        _params: rmcp::handler::server::wrapper::Parameters<NoParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let result = tokio::task::spawn_blocking(move || {
+            let ws = Workspace::discover()?;
+            let manifest_path = ws.manifest_path();
+
+            if !manifest_path.exists() {
+                return Err(toad_core::ToadError::Other(
+                    "MANIFEST.md not found. Run 'toad manifest' to generate it.".to_string(),
+                ));
+            }
+
+            let content = std::fs::read_to_string(manifest_path)?;
+            Ok::<_, toad_core::ToadError>(content)
+        })
+        .await
+        .map_err(|e| crate::errors::toad_error_to_mcp(toad_core::ToadError::Other(e.to_string())))?
+        .map_err(crate::errors::toad_error_to_mcp)?;
+
+        Ok(CallToolResult::success(vec![Content::text(result)]))
+    }
+
+    #[tool(description = "Get detailed context for a specific project (from its CONTEXT.md)")]
+    pub async fn get_project_context(
+        &self,
+        params: rmcp::handler::server::wrapper::Parameters<GetProjectDetailParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let name = params.0.name;
+
+        let result = tokio::task::spawn_blocking(move || {
+            let ws = Workspace::discover()?;
+
+            let context_path = ws.shadows_dir.join(&name).join("CONTEXT.md");
+
+            if !context_path.exists() {
+                return Err(toad_core::ToadError::Other(format!(
+                    "CONTEXT.md for project '{}' not found. Run 'toad manifest' to generate it.",
+                    name
+                )));
+            }
+
+            let content = std::fs::read_to_string(context_path)?;
+            Ok::<_, toad_core::ToadError>(content)
+        })
+        .await
+        .map_err(|e| crate::errors::toad_error_to_mcp(toad_core::ToadError::Other(e.to_string())))?
+        .map_err(crate::errors::toad_error_to_mcp)?;
+
+        Ok(CallToolResult::success(vec![Content::text(result)]))
+    }
 }
 
 const INSTRUCTIONS: &str = "Toad is an AI-native ecosystem context oracle. \

@@ -52,6 +52,9 @@ async fn test_mcp_full_lifecycle() -> Result<(), Box<dyn std::error::Error>> {
     assert!(line.contains("get_ecosystem_summary"));
     assert!(line.contains("get_ecosystem_status"));
     assert!(line.contains("get_project_stats"));
+    assert!(line.contains("get_atlas"));
+    assert!(line.contains("get_manifest"));
+    assert!(line.contains("get_project_context"));
 
     // 6. Shutdown
     drop(stdin);
