@@ -95,7 +95,9 @@ impl ToadService {
         })
     }
 
-    #[tool(description = "List projects with optional filters (query, tag, stack, activity, vcs_status). Returns basic metadata. For detailed info on a specific project, use get_project_detail. For searching by architectural patterns, use search_projects_by_dna.")]
+    #[tool(
+        description = "List projects with optional filters (query, tag, stack, activity, vcs_status). Returns basic metadata. For detailed info on a specific project, use get_project_detail. For searching by architectural patterns, use search_projects_by_dna."
+    )]
     pub async fn list_projects(
         &self,
         params: rmcp::handler::server::wrapper::Parameters<ListProjectsParams>,
@@ -160,7 +162,9 @@ impl ToadService {
         Ok(CallToolResult::success(vec![Content::text(result)]))
     }
 
-    #[tool(description = "Get full metadata for a specific project including path, stack, tags, DNA, submodules, and CONTEXT.md if available. Requires exact project name from list_projects. For just the DNA patterns, use get_project_dna.")]
+    #[tool(
+        description = "Get full metadata for a specific project including path, stack, tags, DNA, submodules, and CONTEXT.md if available. Requires exact project name from list_projects. For just the DNA patterns, use get_project_dna."
+    )]
     pub async fn get_project_detail(
         &self,
         params: rmcp::handler::server::wrapper::Parameters<GetProjectDetailParams>,
@@ -198,7 +202,9 @@ impl ToadService {
         Ok(CallToolResult::success(vec![Content::text(result)]))
     }
 
-    #[tool(description = "Get structural DNA patterns for a project (roles, capabilities, structural patterns). Use this to understand architectural patterns. For full project context, use get_project_detail.")]
+    #[tool(
+        description = "Get structural DNA patterns for a project (roles, capabilities, structural patterns). Use this to understand architectural patterns. For full project context, use get_project_detail."
+    )]
     pub async fn get_project_dna(
         &self,
         params: rmcp::handler::server::wrapper::Parameters<GetProjectDetailParams>,
@@ -226,7 +232,9 @@ impl ToadService {
         Ok(CallToolResult::success(vec![Content::text(result)]))
     }
 
-    #[tool(description = "Compare two projects for migration compatibility. Returns compatibility score, capability matches/mismatches, and migration recommendations. Use get_project_context for both projects to get full details before planning migration.")]
+    #[tool(
+        description = "Compare two projects for migration compatibility. Returns compatibility score, capability matches/mismatches, and migration recommendations. Use get_project_context for both projects to get full details before planning migration."
+    )]
     pub async fn compare_projects(
         &self,
         params: rmcp::handler::server::wrapper::Parameters<CompareProjectsParams>,
@@ -263,7 +271,9 @@ impl ToadService {
         Ok(CallToolResult::success(vec![Content::text(result)]))
     }
 
-    #[tool(description = "Search projects by DNA characteristics (role, capability, structural pattern). Use this to find projects with specific architectural patterns like 'async', 'REST API', 'CLI', 'data layer'. For simple name search, use list_projects or search_projects instead.")]
+    #[tool(
+        description = "Search projects by DNA characteristics (role, capability, structural pattern). Use this to find projects with specific architectural patterns like 'async', 'REST API', 'CLI', 'data layer'. For simple name search, use list_projects or search_projects instead."
+    )]
     pub async fn search_projects_by_dna(
         &self,
         params: rmcp::handler::server::wrapper::Parameters<SearchProjectsParams>,
@@ -302,7 +312,9 @@ impl ToadService {
         Ok(CallToolResult::success(vec![Content::text(result)]))
     }
 
-    #[tool(description = "Semantic search across project names, essence (README content), and tags. Returns ranked results. For searching by architectural patterns, use search_projects_by_dna. For filtered listing, use list_projects.")]
+    #[tool(
+        description = "Semantic search across project names, essence (README content), and tags. Returns ranked results. For searching by architectural patterns, use search_projects_by_dna. For filtered listing, use list_projects."
+    )]
     pub async fn search_projects(
         &self,
         params: rmcp::handler::server::wrapper::Parameters<SearchProjectsParams>,
@@ -322,7 +334,9 @@ impl ToadService {
         Ok(CallToolResult::success(vec![Content::text(result)]))
     }
 
-    #[tool(description = "Get high-level ecosystem summary (SYSTEM_PROMPT.md format). Token-limited overview of all projects. For full details, use get_manifest. For DNA patterns, use get_atlas.")]
+    #[tool(
+        description = "Get high-level ecosystem summary (SYSTEM_PROMPT.md format). Token-limited overview of all projects. For full details, use get_manifest. For DNA patterns, use get_atlas."
+    )]
     pub async fn get_ecosystem_summary(
         &self,
         params: rmcp::handler::server::wrapper::Parameters<GetEcosystemSummaryParams>,
@@ -346,7 +360,9 @@ impl ToadService {
         Ok(CallToolResult::success(vec![Content::text(result)]))
     }
 
-    #[tool(description = "Get ecosystem health status showing VCS state, alignment issues, and activity distribution. Use this to identify projects needing attention. For detailed git status, use get_git_status (if available).")]
+    #[tool(
+        description = "Get ecosystem health status showing VCS state, alignment issues, and activity distribution. Use this to identify projects needing attention. For detailed git status, use get_git_status (if available)."
+    )]
     pub async fn get_ecosystem_status(
         &self,
         params: rmcp::handler::server::wrapper::Parameters<GetEcosystemStatusParams>,
