@@ -4,8 +4,8 @@ use toad_core::Workspace;
 
 use crate::errors::toad_error_to_mcp;
 use crate::server::{
-    AnalyzeDebtParams, AnalyzeDepsParams, AnalyzeHealthParams, AnalyzeVelocityParams,
-    CompareProjectsParams, StatsParams,
+    AnalyzeDebtParams, AnalyzeDepsParams, AnalyzeHealthParams, AnalyzeTrendsParams,
+    AnalyzeVelocityParams, CompareProjectsParams, StatsParams,
 };
 
 pub async fn compare_projects(
@@ -238,7 +238,7 @@ pub async fn analyze_health(
 }
 
 pub async fn analyze_trends(
-    params: Parameters<crate::server::AnalyzeTrendsParams>,
+    params: Parameters<AnalyzeTrendsParams>,
 ) -> Result<CallToolResult, McpError> {
     let days = params.0.days.unwrap_or(90);
     let result = tokio::task::spawn_blocking(move || {

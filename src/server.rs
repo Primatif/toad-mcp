@@ -18,6 +18,7 @@ pub struct ToadService {
 }
 
 #[derive(Deserialize, JsonSchema)]
+#[allow(dead_code)]
 pub struct ListProjectsParams {
     /// Filter by project name (substring)
     pub query: Option<String>,
@@ -32,12 +33,14 @@ pub struct ListProjectsParams {
 }
 
 #[derive(Deserialize, JsonSchema)]
+#[allow(dead_code)]
 pub struct GetProjectDetailParams {
     /// Exact project name
     pub name: String,
 }
 
 #[derive(Deserialize, JsonSchema)]
+#[allow(dead_code)]
 pub struct SearchProjectsParams {
     /// Search term
     pub query: String,
@@ -46,6 +49,7 @@ pub struct SearchProjectsParams {
 }
 
 #[derive(Deserialize, JsonSchema)]
+#[allow(dead_code)]
 pub struct RevealParams {
     /// Search term
     pub query: String,
@@ -54,12 +58,14 @@ pub struct RevealParams {
 }
 
 #[derive(Deserialize, JsonSchema)]
+#[allow(dead_code)]
 pub struct GetEcosystemSummaryParams {
     /// Max tokens (default from config)
     pub token_limit: Option<usize>,
 }
 
 #[derive(Deserialize, JsonSchema)]
+#[allow(dead_code)]
 pub struct GetEcosystemStatusParams {
     /// Filter by project name (substring)
     pub query: Option<String>,
@@ -68,6 +74,7 @@ pub struct GetEcosystemStatusParams {
 }
 
 #[derive(Deserialize, JsonSchema)]
+#[allow(dead_code)]
 pub struct GetProjectStatsParams {
     /// Filter by project name (substring)
     pub query: Option<String>,
@@ -76,17 +83,20 @@ pub struct GetProjectStatsParams {
 }
 
 #[derive(Deserialize, JsonSchema)]
+#[allow(dead_code)]
 pub struct SwitchContextParams {
     /// Name of the context to switch to
     pub name: String,
 }
 
 #[derive(Deserialize, Serialize, JsonSchema)]
+#[allow(dead_code)]
 pub struct NoParams {
     // Empty
 }
 
 #[derive(Deserialize, JsonSchema)]
+#[allow(dead_code)]
 pub struct CompareProjectsParams {
     /// Source project name
     pub source: String,
@@ -95,6 +105,7 @@ pub struct CompareProjectsParams {
 }
 
 #[derive(Deserialize, JsonSchema)]
+#[allow(dead_code)]
 pub struct StatusParams {
     /// Optional query to filter projects
     pub query: Option<String>,
@@ -103,6 +114,7 @@ pub struct StatusParams {
 }
 
 #[derive(Deserialize, JsonSchema)]
+#[allow(dead_code)]
 pub struct StatsParams {
     /// Optional query to filter projects
     pub query: Option<String>,
@@ -113,6 +125,7 @@ pub struct StatsParams {
 }
 
 #[derive(Deserialize, JsonSchema)]
+#[allow(dead_code)]
 pub struct BranchesParams {
     /// Optional query to filter projects
     pub query: Option<String>,
@@ -123,12 +136,14 @@ pub struct BranchesParams {
 }
 
 #[derive(Deserialize, JsonSchema)]
+#[allow(dead_code)]
 pub struct ManifestParams {
     /// Optional project name for project-specific context
     pub project: Option<String>,
 }
 
 #[derive(Deserialize, JsonSchema)]
+#[allow(dead_code)]
 pub struct RegisterContextParams {
     /// Context name
     pub name: String,
@@ -137,6 +152,7 @@ pub struct RegisterContextParams {
 }
 
 #[derive(Deserialize, JsonSchema)]
+#[allow(dead_code)]
 pub struct TagParams {
     /// Project name (optional if using filters)
     pub project: Option<String>,
@@ -151,12 +167,14 @@ pub struct TagParams {
 }
 
 #[derive(Deserialize, JsonSchema)]
+#[allow(dead_code)]
 pub struct AnalyzeDepsParams {
     /// Optional query to filter projects
     pub query: Option<String>,
 }
 
 #[derive(Deserialize, JsonSchema)]
+#[allow(dead_code)]
 pub struct AnalyzeVelocityParams {
     /// Number of days to analyze (default: 30)
     pub days: Option<u32>,
@@ -165,18 +183,21 @@ pub struct AnalyzeVelocityParams {
 }
 
 #[derive(Deserialize, JsonSchema)]
+#[allow(dead_code)]
 pub struct AnalyzeDebtParams {
     /// Optional query to filter projects
     pub query: Option<String>,
 }
 
 #[derive(Deserialize, JsonSchema)]
+#[allow(dead_code)]
 pub struct AnalyzeHealthParams {
     /// Optional query to filter projects
     pub query: Option<String>,
 }
 
 #[derive(Deserialize, JsonSchema)]
+#[allow(dead_code)]
 pub struct AnalyzeTrendsParams {
     /// Number of days to analyze (default: 90)
     pub days: Option<u32>,
