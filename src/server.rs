@@ -1082,6 +1082,25 @@ impl ToadService {
 
         Ok(CallToolResult::success(vec![Content::text(result)]))
     }
+
+    #[tool(
+        description = "[Analysis] Run comprehensive health check on Toad installation and workspace. Returns categorized diagnostics and actionable recommendations."
+    )]
+    pub async fn run_health_check(
+        &self,
+        _params: rmcp::handler::server::wrapper::Parameters<NoParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let result = tokio::task::spawn_blocking(move || {
+            let ws = Workspace::discover()?;
+            let report = toad_ops::doctor::run_health_check(&ws)?;
+            Ok::<_, toad_core::ToadError>(serde_json::to_string_pretty(&report)?)
+        })
+        .await
+        .map_err(|e| crate::errors::toad_error_to_mcp(toad_core::ToadError::Other(e.to_string())))?
+        .map_err(crate::errors::toad_error_to_mcp)?;
+
+        Ok(CallToolResult::success(vec![Content::text(result)]))
+    }
 }
 
 const INSTRUCTIONS: &str = "Toad is an AI-native ecosystem context oracle. \
