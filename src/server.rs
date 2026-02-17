@@ -463,8 +463,26 @@ impl ToadService {
     }
 
     #[tool(
-        description = "[Analysis] Analyze submodule health and alignment across the ecosystem."
+        description = "[Analysis] Analyze historical trends over time. Shows health score changes, disk usage trends, and activity trends."
     )]
+    pub async fn analyze_trends(
+        &self,
+        params: rmcp::handler::server::wrapper::Parameters<AnalyzeTrendsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::analysis::analyze_trends(params).await
+    }
+
+    #[tool(
+        description = "[Analysis] Analyze cross-project patterns and architectural consistency."
+    )]
+    pub async fn analyze_patterns(
+        &self,
+        _params: rmcp::handler::server::wrapper::Parameters<NoParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::analysis::analyze_patterns().await
+    }
+
+    #[tool(description = "[Analysis] Analyze submodule health and alignment across the ecosystem.")]
     pub async fn analyze_submodules(
         &self,
         _params: rmcp::handler::server::wrapper::Parameters<NoParams>,
