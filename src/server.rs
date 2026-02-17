@@ -150,6 +150,38 @@ pub struct TagParams {
     pub harvest: Option<bool>,
 }
 
+#[derive(Deserialize, JsonSchema)]
+pub struct AnalyzeDepsParams {
+    /// Optional query to filter projects
+    pub query: Option<String>,
+}
+
+#[derive(Deserialize, JsonSchema)]
+pub struct AnalyzeVelocityParams {
+    /// Number of days to analyze (default: 30)
+    pub days: Option<u32>,
+    /// Optional query to filter projects
+    pub query: Option<String>,
+}
+
+#[derive(Deserialize, JsonSchema)]
+pub struct AnalyzeDebtParams {
+    /// Optional query to filter projects
+    pub query: Option<String>,
+}
+
+#[derive(Deserialize, JsonSchema)]
+pub struct AnalyzeHealthParams {
+    /// Optional query to filter projects
+    pub query: Option<String>,
+}
+
+#[derive(Deserialize, JsonSchema)]
+pub struct AnalyzeTrendsParams {
+    /// Number of days to analyze (default: 90)
+    pub days: Option<u32>,
+}
+
 #[tool_router]
 impl ToadService {
     pub fn new() -> anyhow::Result<Self> {
@@ -388,6 +420,56 @@ impl ToadService {
         _params: rmcp::handler::server::wrapper::Parameters<NoParams>,
     ) -> Result<CallToolResult, McpError> {
         tools::analysis::run_health_check().await
+    }
+
+    #[tool(
+        description = "[Analysis] Analyze project dependencies and critical path. Shows which projects depend on which crates, identifies critical path, and detects orphans."
+    )]
+    pub async fn analyze_dependencies(
+        &self,
+        params: rmcp::handler::server::wrapper::Parameters<AnalyzeDepsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::analysis::analyze_dependencies(params).await
+    }
+
+    #[tool(
+        description = "[Analysis] Get development velocity metrics for last N days. Shows commits per project, lines changed, and active contributors."
+    )]
+    pub async fn analyze_velocity(
+        &self,
+        params: rmcp::handler::server::wrapper::Parameters<AnalyzeVelocityParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::analysis::analyze_velocity(params).await
+    }
+
+    #[tool(
+        description = "[Analysis] Identify technical debt indicators. Shows TODO/FIXME counts, large files, and calculates a debt score."
+    )]
+    pub async fn analyze_debt(
+        &self,
+        params: rmcp::handler::server::wrapper::Parameters<AnalyzeDebtParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::analysis::analyze_debt(params).await
+    }
+
+    #[tool(
+        description = "[Analysis] Calculate composite project health scores (0-100). Includes AI-readiness metrics and proactive recommendations."
+    )]
+    pub async fn analyze_health(
+        &self,
+        params: rmcp::handler::server::wrapper::Parameters<AnalyzeHealthParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::analysis::analyze_health(params).await
+    }
+
+    #[tool(
+        description = "[Analysis] Analyze submodule health and alignment across the ecosystem."
+    )]
+    pub async fn analyze_submodules(
+        &self,
+        _params: rmcp::handler::server::wrapper::Parameters<NoParams>,
+    ) -> Result<CallToolResult, McpError> {
+        tools::analysis::analyze_submodules().await
     }
 }
 

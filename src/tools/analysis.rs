@@ -3,7 +3,7 @@ use rmcp::model::{CallToolResult, Content, ErrorData as McpError};
 use toad_core::Workspace;
 
 use crate::errors::toad_error_to_mcp;
-use crate::server::{CompareProjectsParams, StatsParams};
+use crate::server::{AnalyzeDebtParams, AnalyzeDepsParams, AnalyzeHealthParams, AnalyzeVelocityParams, CompareProjectsParams, StatsParams};
 
 pub async fn compare_projects(
     params: Parameters<CompareProjectsParams>,
@@ -130,5 +130,91 @@ pub async fn run_health_check() -> Result<CallToolResult, McpError> {
     .map_err(|e| toad_error_to_mcp(toad_core::ToadError::Other(e.to_string())))?
     .map_err(toad_error_to_mcp)?;
 
+    Ok(CallToolResult::success(vec![Content::text(result)]))
+}
+
+pub async fn analyze_dependencies(params: Parameters<AnalyzeDepsParams>) -> Result<CallToolResult, McpError> {
+    let query = params.0.query;
+    let result = tokio::task::spawn_blocking(move || {
+        let ws = Workspace::discover()?;
+        let registry = toad_core::ProjectRegistry::load(ws.active_context.as_deref(), None)?;
+        let targets: Vec<_> = registry.projects.into_iter().filter(|p| {
+            query.as_ref().map_or(true, |q| p.name.to_lowercase().contains(&q.to_lowercase()))
+        }).collect();
+        let graph = toad_ops::analytics::analyze_dependencies(&targets)?;
+        Ok::<_, toad_core::ToadError>(serde_json::to_string_pretty(&graph)?)
+    }).await.map_err(|e| toad_error_to_mcp(toad_core::ToadError::Other(e.to_string())))?.map_err(toad_error_to_mcp)?;
+    Ok(CallToolResult::success(vec![Content::text(result)]))
+}
+
+pub async fn analyze_velocity(params: Parameters<AnalyzeVelocityParams>) -> Result<CallToolResult, McpError> {
+    let days = params.0.days.unwrap_or(30);
+    let query = params.0.query;
+    let result = tokio::task::spawn_blocking(move || {
+        let ws = Workspace::discover()?;
+        let registry = toad_core::ProjectRegistry::load(ws.active_context.as_deref(), None)?;
+        let mut results = std::collections::HashMap::new();
+        for p in registry.projects {
+            if query.as_ref().map_or(true, |q| p.name.to_lowercase().contains(&q.to_lowercase())) {
+                let velocity = toad_ops::analytics::analyze_velocity(&p.path, days)?;
+                results.insert(p.name, velocity);
+            }
+        }
+        Ok::<_, toad_core::ToadError>(serde_json::to_string_pretty(&results)?)
+    }).await.map_err(|e| toad_error_to_mcp(toad_core::ToadError::Other(e.to_string())))?.map_err(toad_error_to_mcp)?;
+    Ok(CallToolResult::success(vec![Content::text(result)]))
+}
+
+pub async fn analyze_debt(params: Parameters<AnalyzeDebtParams>) -> Result<CallToolResult, McpError> {
+    let query = params.0.query;
+    let result = tokio::task::spawn_blocking(move || {
+        let ws = Workspace::discover()?;
+        let registry = toad_core::ProjectRegistry::load(ws.active_context.as_deref(), None)?;
+        let mut results = std::collections::HashMap::new();
+        for p in registry.projects {
+            if query.as_ref().map_or(true, |q| p.name.to_lowercase().contains(&q.to_lowercase())) {
+                let debt = toad_ops::analytics::analyze_debt(&p.path)?;
+                results.insert(p.name, debt);
+            }
+        }
+        Ok::<_, toad_core::ToadError>(serde_json::to_string_pretty(&results)?)
+    }).await.map_err(|e| toad_error_to_mcp(toad_core::ToadError::Other(e.to_string())))?.map_err(toad_error_to_mcp)?;
+    Ok(CallToolResult::success(vec![Content::text(result)]))
+}
+
+pub async fn analyze_health(params: Parameters<AnalyzeHealthParams>) -> Result<CallToolResult, McpError> {
+    let query = params.0.query;
+    let result = tokio::task::spawn_blocking(move || {
+        let ws = Workspace::discover()?;
+        let registry = toad_core::ProjectRegistry::load(ws.active_context.as_deref(), None)?;
+        let mut results = std::collections::HashMap::new();
+        for p in registry.projects {
+            if query.as_ref().map_or(true, |q| p.name.to_lowercase().contains(&q.to_lowercase())) {
+                let health = toad_ops::analytics::calculate_health_score(&p)?;
+                results.insert(p.name, health);
+            }
+        }
+        Ok::<_, toad_core::ToadError>(serde_json::to_string_pretty(&results)?)
+    }).await.map_err(|e| toad_error_to_mcp(toad_core::ToadError::Other(e.to_string())))?.map_err(toad_error_to_mcp)?;
+    Ok(CallToolResult::success(vec![Content::text(result)]))
+}
+
+pub async fn analyze_submodules() -> Result<CallToolResult, McpError> {
+    let result = tokio::task::spawn_blocking(move || {
+        let ws = Workspace::discover()?;
+        let registry = toad_core::ProjectRegistry::load(ws.active_context.as_deref(), None)?;
+        let mut results = Vec::new();
+        for p in registry.projects {
+            for sub in p.submodules {
+                results.push(serde_json::json!({
+                    "project": p.name,
+                    "submodule": sub.name,
+                    "initialized": sub.initialized,
+                    "vcs_status": sub.vcs_status,
+                }));
+            }
+        }
+        Ok::<_, toad_core::ToadError>(serde_json::to_string_pretty(&results)?)
+    }).await.map_err(|e| toad_error_to_mcp(toad_core::ToadError::Other(e.to_string())))?.map_err(toad_error_to_mcp)?;
     Ok(CallToolResult::success(vec![Content::text(result)]))
 }
