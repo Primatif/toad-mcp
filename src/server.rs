@@ -45,6 +45,14 @@ pub struct SearchProjectsParams {
 }
 
 #[derive(Deserialize, JsonSchema)]
+pub struct RevealParams {
+    /// Search term
+    pub query: String,
+    /// Narrow search by tag
+    pub tag: Option<String>,
+}
+
+#[derive(Deserialize, JsonSchema)]
 pub struct GetEcosystemSummaryParams {
     /// Max tokens (default from config)
     pub token_limit: Option<usize>,
@@ -85,6 +93,63 @@ pub struct CompareProjectsParams {
     pub target: String,
 }
 
+#[derive(Deserialize, JsonSchema)]
+pub struct StatusParams {
+    /// Optional query to filter projects
+    pub query: Option<String>,
+    /// Optional tag filter
+    pub tag: Option<String>,
+}
+
+#[derive(Deserialize, JsonSchema)]
+pub struct StatsParams {
+    /// Optional query to filter projects
+    pub query: Option<String>,
+    /// Optional tag filter
+    pub tag: Option<String>,
+    /// Show details for all projects
+    #[allow(dead_code)]
+    pub all: Option<bool>,
+}
+
+#[derive(Deserialize, JsonSchema)]
+pub struct BranchesParams {
+    /// Optional query to filter projects
+    pub query: Option<String>,
+    /// Optional tag filter
+    pub tag: Option<String>,
+    /// Show remote branches
+    pub all: Option<bool>,
+}
+
+#[derive(Deserialize, JsonSchema)]
+pub struct ManifestParams {
+    /// Optional project name for project-specific context
+    pub project: Option<String>,
+}
+
+#[derive(Deserialize, JsonSchema)]
+pub struct RegisterContextParams {
+    /// Context name
+    pub name: String,
+    /// Absolute path to projects directory
+    pub path: String,
+}
+
+#[derive(Deserialize, JsonSchema)]
+pub struct TagParams {
+    /// Project name (optional if using filters)
+    pub project: Option<String>,
+    /// Tag name
+    pub tag: Option<String>,
+    /// Filter by name query
+    pub query: Option<String>,
+    /// Filter by existing tag
+    pub filter_tag: Option<String>,
+    /// Auto-harvest stack tags
+    pub harvest: Option<bool>,
+}
+
 #[tool_router]
 impl ToadService {
     pub fn new() -> anyhow::Result<Self> {
@@ -96,7 +161,7 @@ impl ToadService {
     }
 
     #[tool(
-        description = "List projects with optional filters (query, tag, stack, activity, vcs_status). Returns basic metadata. For detailed info on a specific project, use get_project_detail. For searching by architectural patterns, use search_projects_by_dna."
+        description = "[Discovery] List projects with optional filters. Returns basic metadata. Use get_project_detail for full info."
     )]
     pub async fn list_projects(
         &self,
@@ -163,7 +228,7 @@ impl ToadService {
     }
 
     #[tool(
-        description = "Get full metadata for a specific project including path, stack, tags, DNA, submodules, and CONTEXT.md if available. Requires exact project name from list_projects. For just the DNA patterns, use get_project_dna."
+        description = "[Context] Get full metadata for a project including path, stack, submodules, and CONTEXT.md. Requires exact project name."
     )]
     pub async fn get_project_detail(
         &self,
@@ -203,7 +268,7 @@ impl ToadService {
     }
 
     #[tool(
-        description = "Get structural DNA patterns for a project (roles, capabilities, structural patterns). Use this to understand architectural patterns. For full project context, use get_project_detail."
+        description = "[Context] Get structural DNA patterns for a project (roles, capabilities). Use this to understand architectural patterns."
     )]
     pub async fn get_project_dna(
         &self,
@@ -233,7 +298,7 @@ impl ToadService {
     }
 
     #[tool(
-        description = "Compare two projects for migration compatibility. Returns compatibility score, capability matches/mismatches, and migration recommendations. Use get_project_context for both projects to get full details before planning migration."
+        description = "[Analysis] Compare two projects for migration compatibility. Returns compatibility score and migration recommendations."
     )]
     pub async fn compare_projects(
         &self,
@@ -272,7 +337,7 @@ impl ToadService {
     }
 
     #[tool(
-        description = "Search projects by DNA characteristics (role, capability, structural pattern). Use this to find projects with specific architectural patterns like 'async', 'REST API', 'CLI', 'data layer'. For simple name search, use list_projects or search_projects instead."
+        description = "[Discovery] Search projects by DNA characteristics (role, capability, structural pattern). Find projects with specific patterns like 'async', 'REST API'."
     )]
     pub async fn search_projects_by_dna(
         &self,
@@ -313,7 +378,7 @@ impl ToadService {
     }
 
     #[tool(
-        description = "Semantic search across project names, essence (README content), and tags. Returns ranked results. For searching by architectural patterns, use search_projects_by_dna. For filtered listing, use list_projects."
+        description = "[Discovery] Semantic search across project names, essence (README), and tags. Returns ranked results."
     )]
     pub async fn search_projects(
         &self,
@@ -335,7 +400,7 @@ impl ToadService {
     }
 
     #[tool(
-        description = "Get high-level ecosystem summary (SYSTEM_PROMPT.md format). Token-limited overview of all projects. For full details, use get_manifest. For DNA patterns, use get_atlas."
+        description = "[Discovery] Get high-level ecosystem summary (SYSTEM_PROMPT.md format). Token-limited overview of all projects."
     )]
     pub async fn get_ecosystem_summary(
         &self,
@@ -361,7 +426,7 @@ impl ToadService {
     }
 
     #[tool(
-        description = "Get ecosystem health status showing VCS state, alignment issues, and activity distribution. Use this to identify projects needing attention. For detailed git status, use get_git_status (if available)."
+        description = "[Discovery] Get ecosystem health status showing VCS state and activity distribution. Identify projects needing attention."
     )]
     pub async fn get_ecosystem_status(
         &self,
@@ -383,7 +448,7 @@ impl ToadService {
         Ok(CallToolResult::success(vec![Content::text(result)]))
     }
 
-    #[tool(description = "Get project disk usage stats")]
+    #[tool(description = "[Analysis] Get project disk usage stats and bloat analytics.")]
     pub async fn get_project_stats(
         &self,
         params: rmcp::handler::server::wrapper::Parameters<GetProjectStatsParams>,
@@ -409,7 +474,7 @@ impl ToadService {
         Ok(CallToolResult::success(vec![Content::text(result)]))
     }
 
-    #[tool(description = "Get the currently active project context")]
+    #[tool(description = "[Management] Get the currently active project context (Hub or Pond).")]
     pub async fn get_active_context(
         &self,
         _params: rmcp::handler::server::wrapper::Parameters<NoParams>,
@@ -436,7 +501,7 @@ impl ToadService {
         )]))
     }
 
-    #[tool(description = "List all registered project contexts")]
+    #[tool(description = "[Management] List all registered project contexts.")]
     pub async fn list_contexts(
         &self,
         _params: rmcp::handler::server::wrapper::Parameters<NoParams>,
@@ -472,7 +537,9 @@ impl ToadService {
         )]))
     }
 
-    #[tool(description = "Switch the active project context")]
+    #[tool(
+        description = "[Management] Switch the active project context (changes workspace root)."
+    )]
     pub async fn switch_context(
         &self,
         params: rmcp::handler::server::wrapper::Parameters<SwitchContextParams>,
@@ -498,7 +565,7 @@ impl ToadService {
         Ok(CallToolResult::success(vec![Content::text(result)]))
     }
 
-    #[tool(description = "Get the full architectural atlas (DNA map for all projects)")]
+    #[tool(description = "[Context] Get the full architectural atlas (DNA map for all projects).")]
     pub async fn get_atlas(
         &self,
         _params: rmcp::handler::server::wrapper::Parameters<NoParams>,
@@ -509,7 +576,7 @@ impl ToadService {
 
             if !atlas_path.exists() {
                 return Err(toad_core::ToadError::Other(
-                    "ATLAS.json not found. Run 'toad manifest' to generate it.".to_string(),
+                    "ATLAS.json not found. Run 'toad manifest' or 'generate_manifest' to generate it.".to_string(),
                 ));
             }
 
@@ -523,7 +590,7 @@ impl ToadService {
         Ok(CallToolResult::success(vec![Content::text(result)]))
     }
 
-    #[tool(description = "Get the full ecosystem manifest (detailed project list)")]
+    #[tool(description = "[Context] Get the full ecosystem manifest (detailed project list).")]
     pub async fn get_manifest(
         &self,
         _params: rmcp::handler::server::wrapper::Parameters<NoParams>,
@@ -534,7 +601,7 @@ impl ToadService {
 
             if !manifest_path.exists() {
                 return Err(toad_core::ToadError::Other(
-                    "MANIFEST.md not found. Run 'toad manifest' to generate it.".to_string(),
+                    "MANIFEST.md not found. Run 'toad manifest' or 'generate_manifest' to generate it.".to_string(),
                 ));
             }
 
@@ -548,7 +615,9 @@ impl ToadService {
         Ok(CallToolResult::success(vec![Content::text(result)]))
     }
 
-    #[tool(description = "Get detailed context for a specific project (from its CONTEXT.md)")]
+    #[tool(
+        description = "[Context] Get detailed context for a specific project (from its CONTEXT.md)."
+    )]
     pub async fn get_project_context(
         &self,
         params: rmcp::handler::server::wrapper::Parameters<GetProjectDetailParams>,
@@ -562,13 +631,450 @@ impl ToadService {
 
             if !context_path.exists() {
                 return Err(toad_core::ToadError::Other(format!(
-                    "CONTEXT.md for project '{}' not found. Run 'toad manifest' to generate it.",
+                    "CONTEXT.md for project '{}' not found. Run 'toad manifest' or 'generate_manifest' to generate it.",
                     name
                 )));
             }
 
             let content = std::fs::read_to_string(context_path)?;
             Ok::<_, toad_core::ToadError>(content)
+        })
+        .await
+        .map_err(|e| crate::errors::toad_error_to_mcp(toad_core::ToadError::Other(e.to_string())))?
+        .map_err(crate::errors::toad_error_to_mcp)?;
+
+        Ok(CallToolResult::success(vec![Content::text(result)]))
+    }
+
+    #[tool(
+        description = "[Discovery] Search for projects matching a query. Returns project names, paths, and basic metadata. Follow up with get_project_detail."
+    )]
+    pub async fn reveal_projects(
+        &self,
+        params: rmcp::handler::server::wrapper::Parameters<RevealParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let query = params.0.query;
+        let tag = params.0.tag;
+
+        let result = tokio::task::spawn_blocking(move || {
+            let ws = Workspace::discover()?;
+            let search_result = toad_discovery::search_projects(&ws, &query, tag.as_deref())?;
+            Ok::<_, toad_core::ToadError>(serde_json::to_string_pretty(&search_result)?)
+        })
+        .await
+        .map_err(|e| crate::errors::toad_error_to_mcp(toad_core::ToadError::Other(e.to_string())))?
+        .map_err(crate::errors::toad_error_to_mcp)?;
+
+        Ok(CallToolResult::success(vec![Content::text(result)]))
+    }
+
+    #[tool(
+        description = "[Discovery] Get Git status across all projects. Shows uncommitted changes, unpushed commits, and branch info."
+    )]
+    pub async fn get_git_status(
+        &self,
+        params: rmcp::handler::server::wrapper::Parameters<StatusParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let query = params.0.query;
+        let tag = params.0.tag;
+
+        let result = tokio::task::spawn_blocking(move || {
+            let ws = Workspace::discover()?;
+            let registry = toad_core::ProjectRegistry::load(ws.active_context.as_deref(), None)?;
+
+            let targets: Vec<_> = registry
+                .projects
+                .into_iter()
+                .filter(|p| {
+                    if let Some(q) = &query
+                        && !p.name.to_lowercase().contains(&q.to_lowercase())
+                    {
+                        return false;
+                    }
+                    if let Some(t) = &tag
+                        && !p
+                            .tags
+                            .iter()
+                            .any(|tag| tag.to_lowercase() == t.to_lowercase())
+                    {
+                        return false;
+                    }
+                    true
+                })
+                .collect();
+
+            if targets.is_empty() {
+                return Ok::<_, toad_core::ToadError>(
+                    "No projects found matching filters.".to_string(),
+                );
+            }
+
+            let report = toad_git::generate_multi_repo_status(&targets)?;
+            Ok::<_, toad_core::ToadError>(serde_json::to_string_pretty(&report)?)
+        })
+        .await
+        .map_err(|e| crate::errors::toad_error_to_mcp(toad_core::ToadError::Other(e.to_string())))?
+        .map_err(crate::errors::toad_error_to_mcp)?;
+
+        Ok(CallToolResult::success(vec![Content::text(result)]))
+    }
+
+    #[tool(
+        description = "[Analysis] Get disk usage analytics for projects. Shows total size, build artifacts, and bloat analysis. Note: Does NOT delete anything."
+    )]
+    pub async fn get_disk_stats(
+        &self,
+        params: rmcp::handler::server::wrapper::Parameters<StatsParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let query = params.0.query;
+        let tag = params.0.tag;
+
+        let result = tokio::task::spawn_blocking(move || {
+            let ws = Workspace::discover()?;
+            let registry = toad_core::ProjectRegistry::load(ws.active_context.as_deref(), None)?;
+
+            let report = toad_ops::stats::generate_analytics_report(
+                &registry.projects,
+                query.as_deref(),
+                tag.as_deref(),
+            );
+            Ok::<_, toad_core::ToadError>(serde_json::to_string_pretty(&report)?)
+        })
+        .await
+        .map_err(|e| crate::errors::toad_error_to_mcp(toad_core::ToadError::Other(e.to_string())))?
+        .map_err(crate::errors::toad_error_to_mcp)?;
+
+        Ok(CallToolResult::success(vec![Content::text(result)]))
+    }
+
+    #[tool(
+        description = "[Discovery] List all branches across projects. Shows current branch and available local/remote branches."
+    )]
+    pub async fn list_branches(
+        &self,
+        params: rmcp::handler::server::wrapper::Parameters<BranchesParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let query = params.0.query;
+        let tag = params.0.tag;
+        let all = params.0.all.unwrap_or(false);
+
+        let result = tokio::task::spawn_blocking(move || {
+            let ws = Workspace::discover()?;
+            let registry = toad_core::ProjectRegistry::load(ws.active_context.as_deref(), None)?;
+
+            let targets: Vec<_> = registry
+                .projects
+                .into_iter()
+                .filter(|p| {
+                    if let Some(q) = &query
+                        && !p.name.to_lowercase().contains(&q.to_lowercase())
+                    {
+                        return false;
+                    }
+                    if let Some(t) = &tag
+                        && !p
+                            .tags
+                            .iter()
+                            .any(|tag| tag.to_lowercase() == t.to_lowercase())
+                    {
+                        return false;
+                    }
+                    true
+                })
+                .collect();
+
+            if targets.is_empty() {
+                return Ok::<_, toad_core::ToadError>(
+                    "No projects found matching filters.".to_string(),
+                );
+            }
+
+            let mut output = Vec::new();
+            for p in targets {
+                let local = toad_git::branches::list_local_branches(&p.path)?;
+                let mut branches = local;
+                if all {
+                    let remote = toad_git::branches::list_remote_branches(&p.path)?;
+                    branches.extend(remote);
+                }
+
+                output.push(serde_json::json!({
+                    "project": p.name,
+                    "branches": branches,
+                }));
+            }
+
+            Ok::<_, toad_core::ToadError>(serde_json::to_string_pretty(&output)?)
+        })
+        .await
+        .map_err(|e| crate::errors::toad_error_to_mcp(toad_core::ToadError::Other(e.to_string())))?
+        .map_err(crate::errors::toad_error_to_mcp)?;
+
+        Ok(CallToolResult::success(vec![Content::text(result)]))
+    }
+
+    #[tool(
+        description = "[Management] Rebuild the project registry cache by scanning the workspace. Run this after adding/removing projects."
+    )]
+    pub async fn sync_registry(
+        &self,
+        _params: rmcp::handler::server::wrapper::Parameters<NoParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let result = tokio::task::spawn_blocking(move || {
+            let ws = Workspace::discover()?;
+            let reporter = toad_core::NoOpReporter;
+            let count = toad_discovery::sync_registry(&ws, &reporter)?;
+            Ok::<_, toad_core::ToadError>(format!(
+                "Registry synchronized ({} projects found)",
+                count
+            ))
+        })
+        .await
+        .map_err(|e| crate::errors::toad_error_to_mcp(toad_core::ToadError::Other(e.to_string())))?
+        .map_err(crate::errors::toad_error_to_mcp)?;
+
+        Ok(CallToolResult::success(vec![Content::text(result)]))
+    }
+
+    #[tool(
+        description = "[Context] Generate AI context files (MANIFEST.md, ATLAS.json, SYSTEM_PROMPT.md, CONTEXT.md). Refreshes AI intuition."
+    )]
+    pub async fn generate_manifest(
+        &self,
+        params: rmcp::handler::server::wrapper::Parameters<ManifestParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let project_filter = params.0.project;
+
+        let result = tokio::task::spawn_blocking(move || {
+            let ws = Workspace::discover()?;
+            let current_fp = ws.get_fingerprint()?;
+            let config = GlobalConfig::load(None)?.unwrap_or_default();
+
+            // 1. Sync first
+            let reporter = toad_core::NoOpReporter;
+            toad_discovery::sync_registry(&ws, &reporter)?;
+
+            // 2. Load projects
+            let registry = toad_core::ProjectRegistry::load(ws.active_context.as_deref(), None)?;
+            let projects: Vec<_> = registry
+                .projects
+                .iter()
+                .filter(|p| {
+                    if let Some(f) = &project_filter {
+                        p.name.to_lowercase().contains(&f.to_lowercase())
+                    } else {
+                        true
+                    }
+                })
+                .cloned()
+                .collect();
+
+            if projects.is_empty() {
+                return Err(toad_core::ToadError::Other(
+                    "No projects found matching filter".to_string(),
+                ));
+            }
+
+            // 3. Generate files
+            ws.ensure_shadows()?;
+
+            // MANIFEST.md
+            let manifest_md = toad_manifest::generate_markdown(
+                &projects,
+                current_fp,
+                Some(config.budget.ecosystem_tokens),
+            );
+            fs::write(ws.manifest_path(), manifest_md)?;
+
+            // SYSTEM_PROMPT.md
+            let system_prompt = toad_manifest::generate_system_prompt(
+                &projects,
+                Some(config.budget.ecosystem_tokens),
+            );
+            fs::write(ws.shadows_dir.join("SYSTEM_PROMPT.md"), system_prompt)?;
+
+            // llms.txt
+            let llms_txt = toad_manifest::generate_llms_txt(&projects);
+            fs::write(ws.shadows_dir.join("llms.txt"), llms_txt)?;
+
+            // Per-project
+            for p in &projects {
+                let proj_shadow_dir = ws.shadows_dir.join(&p.name);
+                fs::create_dir_all(&proj_shadow_dir)?;
+
+                let context_md = toad_manifest::generate_project_context_md(
+                    p,
+                    Some(config.budget.project_tokens),
+                );
+                fs::write(proj_shadow_dir.join("CONTEXT.md"), context_md)?;
+            }
+
+            Ok::<_, toad_core::ToadError>(format!(
+                "Manifest and tiered prompts generated for {} projects",
+                projects.len()
+            ))
+        })
+        .await
+        .map_err(|e| crate::errors::toad_error_to_mcp(toad_core::ToadError::Other(e.to_string())))?
+        .map_err(crate::errors::toad_error_to_mcp)?;
+
+        Ok(CallToolResult::success(vec![Content::text(result)]))
+    }
+
+    #[tool(
+        description = "[Management] Register a new project context. Creates a new workspace configuration for a projects directory."
+    )]
+    pub async fn register_context(
+        &self,
+        params: rmcp::handler::server::wrapper::Parameters<RegisterContextParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let name = params.0.name;
+        let path = params.0.path;
+
+        let result = tokio::task::spawn_blocking(move || {
+            let mut config = GlobalConfig::load(None)?.unwrap_or_default();
+
+            let abs_path = fs::canonicalize(std::path::PathBuf::from(&path))
+                .map_err(|e| toad_core::ToadError::Other(format!("Invalid path: {}", e)))?;
+
+            if !abs_path.exists() {
+                return Err(toad_core::ToadError::Other(format!(
+                    "Path does not exist: {:?}",
+                    abs_path
+                )));
+            }
+
+            if config.project_contexts.contains_key(&name) {
+                return Err(toad_core::ToadError::Other(format!(
+                    "Context '{}' already exists",
+                    name
+                )));
+            }
+
+            // Auto-detect type
+            let detected_type = if abs_path.join(".gitmodules").exists() {
+                toad_core::ContextType::Hub
+            } else if abs_path.join("projects").exists() {
+                toad_core::ContextType::Pond
+            } else {
+                toad_core::ContextType::Generic
+            };
+
+            let ctx = toad_core::ProjectContext {
+                path: abs_path.clone(),
+                description: None,
+                context_type: detected_type,
+                ai_vendors: Vec::new(),
+                registered_at: std::time::SystemTime::now(),
+            };
+
+            config.project_contexts.insert(name.clone(), ctx);
+
+            // Create per-context storage
+            let ctx_shadows = GlobalConfig::context_dir(&name, None)
+                .map_err(|e| toad_core::ToadError::Other(e.to_string()))?
+                .join("shadows");
+            fs::create_dir_all(&ctx_shadows)?;
+
+            config.save(None)?;
+
+            Ok::<_, toad_core::ToadError>(format!(
+                "Context '{}' ({}) registered at {:?}",
+                name, detected_type, abs_path
+            ))
+        })
+        .await
+        .map_err(|e| crate::errors::toad_error_to_mcp(toad_core::ToadError::Other(e.to_string())))?
+        .map_err(crate::errors::toad_error_to_mcp)?;
+
+        Ok(CallToolResult::success(vec![Content::text(result)]))
+    }
+
+    #[tool(
+        description = "[Management] Assign a tag to projects. Use query/tag filters to target specific projects. Harvest mode auto-detects stack tags."
+    )]
+    pub async fn tag_projects(
+        &self,
+        params: rmcp::handler::server::wrapper::Parameters<TagParams>,
+    ) -> Result<CallToolResult, McpError> {
+        let params = params.0;
+
+        let result = tokio::task::spawn_blocking(move || {
+            let ws = Workspace::discover()?;
+            let mut tag_reg = toad_core::TagRegistry::load(&ws.tags_path())?;
+            let registry = toad_core::ProjectRegistry::load(ws.active_context.as_deref(), None)?;
+            let projects = registry.projects;
+
+            let mut targets = Vec::new();
+
+            if params.harvest.unwrap_or(false) {
+                for p in projects {
+                    let stack_tag = p.stack.to_lowercase();
+                    tag_reg.add_tag(&p.name, &stack_tag);
+                    targets.push(p.name.clone());
+
+                    for sub in p.submodules {
+                        let sub_stack_tag = sub.stack.to_lowercase();
+                        tag_reg.add_tag(&sub.name, &sub_stack_tag);
+                        targets.push(sub.name.clone());
+                    }
+                }
+            } else if params.query.is_some() || params.filter_tag.is_some() {
+                let t_name = params.tag.or(params.project).ok_or_else(|| {
+                    toad_core::ToadError::Other("Must provide a tag name to assign.".to_string())
+                })?;
+
+                let matching: Vec<_> = projects
+                    .into_iter()
+                    .filter(|p| {
+                        let name_match = match &params.query {
+                            Some(q) => p.name.to_lowercase().contains(&q.to_lowercase()),
+                            None => true,
+                        };
+                        let tag_match = match &params.filter_tag {
+                            Some(t) => {
+                                let target = if t.starts_with('#') {
+                                    t.clone()
+                                } else {
+                                    format!("#{}", t)
+                                };
+                                p.tags
+                                    .iter()
+                                    .any(|tag| tag.to_lowercase() == target.to_lowercase())
+                            }
+                            None => true,
+                        };
+                        name_match && tag_match
+                    })
+                    .collect();
+
+                if matching.is_empty() {
+                    return Ok::<_, toad_core::ToadError>(
+                        "No projects found matching filters.".to_string(),
+                    );
+                }
+
+                for p in matching {
+                    tag_reg.add_tag(&p.name, &t_name);
+                    targets.push(p.name);
+                }
+            } else if let Some(p_name) = params.project {
+                if let Some(t_name) = params.tag {
+                    tag_reg.add_tag(&p_name, &t_name);
+                    targets.push(p_name);
+                } else {
+                    return Err(toad_core::ToadError::Other(
+                        "Must provide a tag name.".to_string(),
+                    ));
+                }
+            } else {
+                return Err(toad_core::ToadError::Other(
+                    "Must provide a project name or use filters.".to_string(),
+                ));
+            }
+
+            tag_reg.save(&ws.tags_path())?;
+            Ok::<_, toad_core::ToadError>(format!("Tagged {} projects.", targets.len()))
         })
         .await
         .map_err(|e| crate::errors::toad_error_to_mcp(toad_core::ToadError::Other(e.to_string())))?
