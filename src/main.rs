@@ -1,5 +1,6 @@
 mod errors;
 mod server;
+mod tools;
 
 use rmcp::ServiceExt;
 use server::ToadService;
