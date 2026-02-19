@@ -527,6 +527,9 @@ impl ServerHandler for ToadService {
                 name: "toad-mcp".to_string(),
                 version: env!("CARGO_PKG_VERSION").to_string(),
                 description: Some("Toad MCP Server - AI-native ecosystem context oracle".to_string()),
+                icons: None,
+                title: Some("Toad MCP Server".to_string()),
+                website_url: Some("https://github.com/Primatif/Primatif_Toad".to_string()),
             },
             instructions: Some(INSTRUCTIONS.into()),
         }
