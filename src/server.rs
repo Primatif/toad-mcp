@@ -524,11 +524,9 @@ impl ServerHandler for ToadService {
             protocol_version: ProtocolVersion::LATEST,
             capabilities: ServerCapabilities::builder().enable_tools().build(),
             server_info: Implementation {
-                name: "toad-mcp".into(),
-                version: env!("CARGO_PKG_VERSION").into(),
-                icons: None,
-                title: Some("Toad MCP Server".into()),
-                website_url: Some("https://github.com/Primatif/Primatif_Toad".into()),
+                name: "toad-mcp".to_string(),
+                version: env!("CARGO_PKG_VERSION").to_string(),
+                description: Some("Toad MCP Server - AI-native ecosystem context oracle".to_string()),
             },
             instructions: Some(INSTRUCTIONS.into()),
         }
